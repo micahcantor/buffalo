@@ -1,13 +1,13 @@
 CC := clang
 CFLAGS := -g -Wall -Wno-deprecated-declarations -Werror -fsanitize=address
 
-all: editor
+all: buffalo
 
 clean:
-	rm -f editor
+	rm -f buffalo
 
-editor: editor.c rope.c rope.h
-	$(CC) $(CFLAGS) -o editor editor.c rope.c -lncurses
+buffalo: buffalo.c gap_buffer.c gap_buffer.h
+	$(CC) $(CFLAGS) -o buffalo buffalo.c gap_buffer.c -lncurses
 
 format:
 	@echo "Reformatting source code."
