@@ -25,7 +25,6 @@ void print_gap_buffer(gap_buffer_t* gb) {
 }
 
 static void expand(gap_buffer_t* gb) {
-  printf("expanding\n");
   size_t new_size = gb->size * 2;
   size_t gap_size = new_size - gb->size;
   char* old_data = gb->data;
@@ -39,7 +38,6 @@ static void expand(gap_buffer_t* gb) {
 }
 
 void cursor_forward(gap_buffer_t* gb) {
-  printf("%zu %zu %zu\n", gb->size, gb->left, gb->right);
   if (gb->right < gb->size) {
     char c = gb->data[gb->right - 1];
     gb->data[gb->left] = c;
@@ -51,7 +49,6 @@ void cursor_forward(gap_buffer_t* gb) {
 void cursor_backward(gap_buffer_t* gb) {
   if (gb->left > 0) {
     char c = gb->data[gb->left - 1];
-    printf("%zu %zu %zu %c\n", gb->size, gb->left, gb->right, c);
     gb->data[gb->right - 1] = c;
     gb->right--;
     gb->left--;

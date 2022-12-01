@@ -1,5 +1,4 @@
-#ifndef GAP_BUFFER_H
-#define GAP_BUFFER_H
+#pragma once
 
 #include <string.h>
 
@@ -29,5 +28,3 @@ void insert_char(gap_buffer_t* gb, char c);
 void insert_string(gap_buffer_t* gb, char* str);
 
 void delete_char(gap_buffer_t* gb);
-
-#endif
