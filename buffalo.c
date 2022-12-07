@@ -7,9 +7,12 @@
 #include "ui.h"
 #include "buffalo_state.h"
 
+#define MAX(x, y) ((x) > (y) ? (x) : (y))
+#define MIN_INIT_SIZE 16
+
 FILE* load_file(gap_buffer_t* gb, const char* file_path) {
   // Try to open input file
-  FILE* input = fopen(file_path, "a+");
+  FILE* input = fopen(file_path, "r+");
   if (input == NULL) {
     perror("Unable to open input file");
     exit(1);
@@ -39,10 +42,16 @@ FILE* load_file(gap_buffer_t* gb, const char* file_path) {
     exit(2);
   }
 
-  init_gap_buffer(gb, input_size);
+  init_gap_buffer(gb, MAX(input_size, MIN_INIT_SIZE));
   insert_string(gb, contents);
 
   free(contents);
+
+  // Seek back to the beginning of the file
+  if (fseek(input, 0, SEEK_SET) != 0) {
+    perror("Unable to seek to beginning of file");
+    exit(2);
+  }
 
   return input;
 }
@@ -61,7 +70,7 @@ int main(int argc, char** argv) {
   
   // Initialize program state
   buffalo_state_t bs;
-  init_buffalo_state(&bs, file_path, &gb);
+  init_buffalo_state(&bs, file_path, input, &gb);
 
   // Initialize the ui
   ui_init(&bs);

@@ -5,6 +5,7 @@
 typedef struct {
   char* data;
   size_t size;
+  size_t capacity;
   size_t left;
   size_t right;
 } gap_buffer_t;
@@ -12,8 +13,6 @@ typedef struct {
 void init_gap_buffer(gap_buffer_t* gb, size_t size);
 
 void destroy_gap_buffer(gap_buffer_t* gb);
-
-void print_gap_buffer(gap_buffer_t* gb);
 
 void cursor_forward(gap_buffer_t* gb);
 
@@ -28,3 +27,7 @@ void insert_char(gap_buffer_t* gb, char c);
 void insert_string(gap_buffer_t* gb, char* str);
 
 void delete_char(gap_buffer_t* gb);
+
+void print_gap_buffer(gap_buffer_t* gb);
+
+void gap_buffer_data(gap_buffer_t* gb, char* data);

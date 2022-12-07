@@ -6,22 +6,13 @@
 void init_gap_buffer(gap_buffer_t* gb, size_t size) {
   gb->data = malloc(size);
   gb->size = size;
+  gb->capacity = 0;
   gb->left = 0; 
   gb->right = size;
 }
 
 void destroy_gap_buffer(gap_buffer_t* gb) {
   free(gb->data);
-}
-
-void print_gap_buffer(gap_buffer_t* gb) {
-  for (int i = 0; i < gb->left; i++) {
-    printf("%c", gb->data[i]);
-  }
-  for (int i = gb->right; i < gb->size; i++) {
-    printf("%c", gb->data[i]);
-  }
-  printf("\n");
 }
 
 static void expand(gap_buffer_t* gb) {
@@ -70,10 +61,11 @@ void move_cursor_to(gap_buffer_t* gb, int location) {
 }
 
 void insert_char(gap_buffer_t* gb, char c) {
-  if (gb->left == gb->right - 1) {
+  if (gb->left >= gb->right - 1) {
     expand(gb);
   }
   gb->data[gb->left] = c;
+  gb->capacity++;
   gb->left++;
 }
 
@@ -88,5 +80,21 @@ void insert_string(gap_buffer_t* gb, char* str) {
 void delete_char(gap_buffer_t* gb) {
   if (gb->left > 0) {
     gb->left--;
+    gb->capacity--;
   }
+}
+
+void print_gap_buffer(gap_buffer_t* gb) {
+  for (int i = 0; i < gb->left; i++) {
+    printf("%c", gb->data[i]);
+  }
+  for (int i = gb->right; i < gb->size; i++) {
+    printf("%c", gb->data[i]);
+  }
+  printf("\n");
+}
+
+void gap_buffer_data(gap_buffer_t* gb, char* data) {
+  memcpy(data, gb->data, gb->left);
+  memcpy(data + gb->left + 1, gb->data + gb->right, gb->size - gb->right);
 }
