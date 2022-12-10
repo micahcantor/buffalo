@@ -10,7 +10,7 @@
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
 #define MIN_INIT_SIZE 16
 
-FILE* load_file(gap_buffer_t* gb, const char* file_path) {
+FILE* load_file(gb_list_t* gbs, const char* file_path) {
   // Try to open input file
   FILE* input = fopen(file_path, "r+");
   if (input == NULL) {
@@ -42,8 +42,13 @@ FILE* load_file(gap_buffer_t* gb, const char* file_path) {
     exit(2);
   }
 
-  init_gap_buffer(gb, MAX(input_size, MIN_INIT_SIZE));
-  insert_string(gb, contents);
+  char* line;
+  while ((line = strsep(&contents, "\n")) != NULL) {
+    gap_buffer_t gb;
+    init_gap_buffer(&gb, strlen(line) + 1);
+    insert_string(&gb, line);
+    gb_list_add(gbs, gb);
+  }
 
   free(contents);
 
@@ -64,13 +69,14 @@ int main(int argc, char** argv) {
 
   char* file_path = argv[1];
 
-  // Initialize gap buffer
-  gap_buffer_t gb;
-  FILE* input = load_file(&gb, file_path);
+  // Initialize gap buffers
+  gb_list_t gbs;
+  gb_list_init(&gbs);
+  FILE* input = load_file(&gbs, file_path);
   
   // Initialize program state
   buffalo_state_t bs;
-  init_buffalo_state(&bs, file_path, input, &gb);
+  init_buffalo_state(&bs, file_path, input, &gbs);
 
   // Initialize the ui
   ui_init(&bs);
@@ -79,7 +85,7 @@ int main(int argc, char** argv) {
   ui_run(&bs);
 
   // Clean up
-  destroy_gap_buffer(&gb);
+  gb_list_destroy(&gbs);
   fclose(input);
   
   return 0;

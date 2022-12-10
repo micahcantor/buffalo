@@ -26,22 +26,14 @@ pthread_t ui_thread;
 pthread_mutexattr_t ui_lock_attr;
 pthread_mutex_t ui_lock;
 
+// Ctrl-modified keys can be extracted with a bitmask. See https://stackoverflow.com/a/39960443
 #define CTRL(c) ((c) & 037)
 
-/**
- * Initialize the user interface and set up a callback function that should be
- * called every time there is a new message to send.
- *
- * \param callback  A function that should run every time there is new input.
- *                  The string passed to the callback should be copied if you
- *                  need to retain it after the callback function returns.
- */
 void ui_init(buffalo_state_t* bs) {
   // Initialize curses
   initscr();
   raw();
   noecho();
-  curs_set(0);
   timeout(INPUT_TIMEOUT_MS);
 
   // Get the number of rows and columns in the terminal display
@@ -77,13 +69,90 @@ void ui_init(buffalo_state_t* bs) {
 
   // Display initial data
   pthread_mutex_lock(&ui_lock);
-  for(int i = 0; i < bs->gb->left; i++) {
-    form_driver(editor_form, bs->gb->data[i]);
-  }
-  for (int i = bs->gb->right; i < bs->gb->size; i++) {
-    form_driver(editor_form, bs->gb->data[i]);
+  for (size_t i = 0; i < bs->gbs->length; i++) {
+    gap_buffer_t gb = bs->gbs->buffers[i];
+    char line[gb.capacity];
+    gap_buffer_data(&gb, line);
+    // Display each character in each line
+    for (size_t j = 0; j < gb.capacity; j++) {
+      form_driver(editor_form, gb.data[j]);
+    }
+    // Display newline unless we are at the end
+    if (i != bs->gbs->length - 1) {
+      form_driver(editor_form, REQ_NEW_LINE);
+    }
   }
   pthread_mutex_unlock(&ui_lock);
+
+}
+
+static void quit(buffalo_state_t* bs) {
+  if (bs->saved) {
+    ui_exit(bs);
+  } else {
+    // TODO: display message to confirm quit w/o save
+  }
+}
+
+static void save(buffalo_state_t* bs) {
+  // TODO: reimplement with gbs
+  bs->saved = true;
+  for (int i = 0; i < bs->gbs->length; i++) {
+    gap_buffer_t gb = bs->gbs->buffers[i];
+    char line[gb.capacity];
+    gap_buffer_data(&gb, line);
+  }
+}
+
+static inline void arrow_key(buffalo_state_t* bs) {
+  int ch1 = getch();
+  int ch2 = getch();
+  if (ch1 == '[' && ch2 == 'A') { // up arrow
+    form_driver(editor_form, REQ_PREV_LINE);
+  } else if (ch1 == '[' && ch2 == 'B') { // down arrow
+    form_driver(editor_form, REQ_NEXT_LINE);
+  } else if (ch1 == '[' && ch2 == 'C') { // right arrow
+    form_driver(editor_form, REQ_NEXT_CHAR);
+  } else if (ch1 == '[' && ch2 == 'D') { // left arrow
+    form_driver(editor_form, REQ_PREV_CHAR);
+  }
+}
+
+static inline void edit(int ch, buffalo_state_t* bs) {
+  bs->saved = false;
+  int row, col;
+  getyx(stdscr, row, col);
+  gap_buffer_t* line_gb = &bs->gbs->buffers[row];
+  // mvprintw(15, 10, "(%d %d)", row, col);
+  if (ch == KEY_BACKSPACE || ch == KEY_DC || ch == 127) {
+    // Update UI
+    form_driver(editor_form, REQ_DEL_PREV);
+    // If at beginning of line, delete this line
+    if (col == 0 && row > 0) {
+      gb_list_delete(bs->gbs, row);
+    } else { // Otherwise move the cursor and delete character
+      move_cursor_to(line_gb, col);
+      delete_char(line_gb);
+    }
+  } else if (ch == KEY_ENTER || ch == '\n') {
+    // Insert newline at end of current line
+    move_cursor_to(line_gb, col);
+    insert_char(line_gb, '\n');
+
+    // Insert empty line after current row
+    gap_buffer_t gb;
+    init_gap_buffer(&gb, 8);
+    insert_char(&gb, '\n');
+    gb_list_insert_at(bs->gbs, gb, row);
+
+    // Update UI
+    form_driver(editor_form, REQ_NEW_LINE);
+  } else {
+    // Update UI, move cursor and insert character
+    form_driver(editor_form, ch);
+    move_cursor_to(line_gb, col);
+    insert_char(line_gb, ch);
+  }
 }
 
 /**
@@ -102,31 +171,15 @@ void ui_run(buffalo_state_t* bs) {
     pthread_mutex_lock(&ui_lock);
 
     if (ch == CTRL('Q')) { // quit
-      if (bs->saved) {
-        ui_exit(bs);
-      } else {
-        // TODO: display message to confirm quit w/o save
-      }
+      quit(bs);
     } else if (ch == CTRL('S')) { // save
-      char* data = malloc(bs->gb->capacity);
-      gap_buffer_data(bs->gb, data);
-      fwrite(data, bs->gb->capacity, 1, bs->input);
-      free(data);
-      bs->saved = true;
-    } else { // non-ctrl key
-      bs->saved = false;
-      if (ch == KEY_BACKSPACE || ch == KEY_DC || ch == 127) {
-        form_driver(editor_form, REQ_DEL_PREV);
-        delete_char(bs->gb);
-      } else if (ch == KEY_ENTER || ch == '\n') {
-        form_driver(editor_form, REQ_NEW_LINE);
-        insert_char(bs->gb, '\n');
-      } else {
-        form_driver(editor_form, ch);
-        insert_char(bs->gb, ch);
-      }
-    } 
-    
+      save(bs);
+    } else if (ch == '\x1b') { // escape to start arrow key
+      arrow_key(bs);
+    } else { // edit
+      edit(ch, bs);
+    }
+
     // Unlock the UI
     pthread_mutex_unlock(&ui_lock);
   }

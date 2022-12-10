@@ -3,8 +3,8 @@
 #include "buffalo_state.h"
 #include "gap_buffer.h"
 
-void init_buffalo_state(buffalo_state_t* bs, const char* file_path, FILE* input, gap_buffer_t* gb) {
-  bs->gb = gb;
+void init_buffalo_state(buffalo_state_t* bs, const char* file_path, FILE* input, gb_list_t* gbs) {
+  bs->gbs = gbs;
   bs->file_path = file_path;
   bs->input = input;
   bs->row = 0;

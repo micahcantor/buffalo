@@ -5,7 +5,7 @@
 #include "gap_buffer.h"
 
 typedef struct {
-  gap_buffer_t* gb;
+  gb_list_t* gbs;
   const char* file_path;
   FILE* input;
   int row;
@@ -14,4 +14,4 @@ typedef struct {
   bool saved;
 } buffalo_state_t;
 
-void init_buffalo_state(buffalo_state_t* bs, const char* file_path, FILE* input, gap_buffer_t* gb);
+void init_buffalo_state(buffalo_state_t* bs, const char* file_path, FILE* input, gb_list_t* gbs);
