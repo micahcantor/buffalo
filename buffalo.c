@@ -52,12 +52,6 @@ FILE* load_file(gb_list_t* gbs, const char* file_path) {
 
   free(contents);
 
-  // Seek back to the beginning of the file
-  if (fseek(input, 0, SEEK_SET) != 0) {
-    perror("Unable to seek to beginning of file");
-    exit(2);
-  }
-
   return input;
 }
  

@@ -110,13 +110,8 @@ void gb_list_init(gb_list_t* gbs) {
 
 void gb_list_insert_at(gb_list_t* gbs, gap_buffer_t gb, size_t idx) {
   gbs->buffers = realloc(gbs->buffers, (gbs->length + 1) * sizeof(gap_buffer_t));
-  for (int i = 0; i < gbs->length + 1; i++) {
-    if (i == idx) {
-      memmove(gbs->buffers + i + 1, gbs->buffers + i, (gbs->length - i) * sizeof(gap_buffer_t));
-      gbs->buffers[i] = gb;
-      break;
-    }
-  }
+  memmove(gbs->buffers + idx + 1, gbs->buffers + idx, (gbs->length - idx) * sizeof(gap_buffer_t));
+  gbs->buffers[idx] = gb;
   gbs->length++;
 }
 

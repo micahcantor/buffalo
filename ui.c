@@ -95,26 +95,39 @@ static void quit(buffalo_state_t* bs) {
 }
 
 static void save(buffalo_state_t* bs) {
-  // TODO: reimplement with gbs
-  bs->saved = true;
+  // Clear contents of the file, reset cursor to beginning
+  bs->input = freopen(NULL, "w+", bs->input);
+  if (bs->input == NULL) {
+    perror("Unable to clear input file");
+    exit(2);
+  }
+
+  // Write a line in the file for each buffer
   for (int i = 0; i < bs->gbs->length; i++) {
     gap_buffer_t gb = bs->gbs->buffers[i];
     char line[gb.capacity];
     gap_buffer_data(&gb, line);
+    fwrite(line, gb.capacity, 1, bs->input);
+    if (i != bs->gbs->length - 1) {
+      fwrite("\n", 1, 1, bs->input);
+    }
   }
+  bs->saved = true;
 }
 
 static inline void arrow_key(buffalo_state_t* bs) {
   int ch1 = getch();
-  int ch2 = getch();
-  if (ch1 == '[' && ch2 == 'A') { // up arrow
-    form_driver(editor_form, REQ_PREV_LINE);
-  } else if (ch1 == '[' && ch2 == 'B') { // down arrow
-    form_driver(editor_form, REQ_NEXT_LINE);
-  } else if (ch1 == '[' && ch2 == 'C') { // right arrow
-    form_driver(editor_form, REQ_NEXT_CHAR);
-  } else if (ch1 == '[' && ch2 == 'D') { // left arrow
-    form_driver(editor_form, REQ_PREV_CHAR);
+  if (ch1 == '[') {
+    int ch2 = getch();
+    if (ch2 == 'A') {
+      form_driver(editor_form, REQ_PREV_LINE);
+    } else if (ch2 == 'B') {
+      form_driver(editor_form, REQ_NEXT_LINE);
+    } else if (ch2 == 'C') {
+      form_driver(editor_form, REQ_NEXT_CHAR);
+    } else if (ch2 == 'D') {
+      form_driver(editor_form, REQ_PREV_CHAR);
+    }
   }
 }
 
