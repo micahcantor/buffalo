@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include "row.h"
+#include "config.h"
 
 typedef struct {
   row_list_t* row_list;
@@ -10,6 +11,7 @@ typedef struct {
   FILE* input;
   bool running;
   bool saved;
+  config_t* config;
 } buffalo_state_t;
 
-void init_buffalo_state(buffalo_state_t* bs, const char* file_path, FILE* input, row_list_t* row_list);
+void init_buffalo_state(buffalo_state_t* bs, const char* file_path, FILE* input, row_list_t* row_list, config_t* config);

@@ -114,6 +114,36 @@ void ui_init(buffalo_state_t* bs) {
 
 }
 
+static void run_command(char* command) {
+  // Create a child process
+  pid_t child_id = fork();
+  if (child_id == -1) {
+    perror("fork failed");
+    exit(EXIT_FAILURE);
+  }
+
+  // Execute build command in child
+  if (child_id == 0) {
+    int rc = execlp(command);
+    if (rc == -1) {
+      error("exec failed");
+      exit(EXIT_FAILURE);
+    }
+  }
+}
+
+static void build(buffalo_state_t* bs) {
+  if (bs->config->build_command != NULL) {
+    run_command(bs->config->build_command);
+  }
+}
+
+static void test(buffalo_state_t* bs) {
+  if (bs->config->test_command != NULL) {
+    run_command(bs->config->test_command);
+  }
+}
+
 static void quit(buffalo_state_t* bs) {
   if (bs->saved) {
     ui_exit(bs);
@@ -240,6 +270,10 @@ void ui_run(buffalo_state_t* bs) {
       quit(bs);
     } else if (ch == CTRL('S')) { // save
       save(bs);
+    } else if (ch == CTRL('B')) { // build
+      build(bs);
+    } else if (ch == CTRL('T')) { // test
+      test(bs);
     } else if (ch == '\x1b') { // escape to start arrow key
       arrow_key(bs);
     } else { // edit

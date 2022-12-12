@@ -64,14 +64,19 @@ int main(int argc, char** argv) {
 
   char* file_path = argv[1];
 
-  // Initialize gap buffers
+  // Initialize buffers
   row_list_t row_list;
   row_list_init(&row_list);
   FILE* input = load_file(&row_list, file_path);
+
+  // Initialize and parse config
+  config_t config;
+  config_init(&config);
+  config_parse(&config);
   
   // Initialize program state
   buffalo_state_t bs;
-  init_buffalo_state(&bs, file_path, input, &row_list);
+  init_buffalo_state(&bs, file_path, input, &row_list, &config);
 
   // Initialize the ui
   ui_init(&bs);
