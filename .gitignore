@@ -2,3 +2,4 @@ buffalo
 input/
 .nfs*
 .vscode/
+asan.log.*
