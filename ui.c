@@ -8,6 +8,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <libgen.h>
+#include <unistd.h>
 
 // The timeout for input
 #define INPUT_TIMEOUT_MS 10
@@ -114,7 +115,7 @@ void ui_init(buffalo_state_t* bs) {
 
 }
 
-static void run_command(char* command) {
+static void run_command(const char* command) {
   // Create a child process
   pid_t child_id = fork();
   if (child_id == -1) {
@@ -124,9 +125,9 @@ static void run_command(char* command) {
 
   // Execute build command in child
   if (child_id == 0) {
-    int rc = execlp(command);
+    int rc = execlp(command, command, NULL);
     if (rc == -1) {
-      error("exec failed");
+      perror("exec failed");
       exit(EXIT_FAILURE);
     }
   }
