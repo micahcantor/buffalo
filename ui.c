@@ -7,9 +7,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <libgen.h>
 
 // The timeout for input
 #define INPUT_TIMEOUT_MS 10
+
+#define HEADER_HEIGHT 1
 
 // The ncurses forms code is loosely based on the first example at
 // http://tldp.org/HOWTO/NCURSES-Programming-HOWTO/forms.html
@@ -17,8 +20,14 @@
 // The fields array for the editor field. Must end in NULL
 FIELD* editor_fields[2];
 
+// Fields array for the display field.
+FIELD* display_fields[2];
+
 // The form that holds the editor field
 FORM* editor_form;
+
+// Form that holds the header field
+FORM* header_form;
 
 // The handle for the UI thread
 pthread_t ui_thread;
@@ -43,25 +52,40 @@ void ui_init(buffalo_state_t* bs) {
   getmaxyx(stdscr, rows, cols);  // This uses a macro to modify rows and cols
 
   // Calculate the height of the display field
-  int editor_height = rows - 1;
+  int editor_height = rows - HEADER_HEIGHT - 1;
 
   // Create the editor window
   // height, width, start row, start col, overflow buffer lines, buffers
-  editor_fields[0] = new_field(editor_height, cols, 0, 0, 0, 0);
+  editor_fields[0] = new_field(editor_height, cols, HEADER_HEIGHT + 1, 0, 0, 0);
   editor_fields[1] = NULL;
+
+  // Create header display field
+  display_fields[0] = new_field(HEADER_HEIGHT, cols, 0, 0, 0, 0);
+  display_fields[1] = NULL;
 
   // Grow the editor field buffer as needed
   field_opts_off(editor_fields[0], O_STATIC);
 
+  // Don't advance to the next field automatically when using the input field
+  field_opts_off(display_fields[0], O_AUTOSKIP);
+
   // Turn off word wrap (nice, but causes other problems)
   field_opts_off(editor_fields[0], O_WRAP);
+  field_opts_off(display_fields[0], O_WRAP);
 
   // Create the forms
   editor_form = new_form(editor_fields);
+  header_form = new_form(display_fields);
 
-  // Display the form
+  // Display the forms
+  post_form(header_form);
   post_form(editor_form);
   refresh();
+
+  // Draw a horizontal split
+  for (int i = 0; i < cols; i++) {
+    mvprintw(HEADER_HEIGHT, i, "-");
+  }
 
   // Initialize the UI lock
   pthread_mutexattr_init(&ui_lock_attr);
@@ -70,6 +94,13 @@ void ui_init(buffalo_state_t* bs) {
 
   // Display initial data
   pthread_mutex_lock(&ui_lock);
+
+  // Display header
+  char* file_name = basename((char*)bs->file_path);
+  mvprintw(0, cols - strlen(file_name), "%s", file_name);
+  mvprintw(0, cols / 2 - 7, "buffalo");
+
+  // Display initial contents of file
   for (int i = 0; i < bs->row_list->size; i++) {
     row_t row = bs->row_list->rows[i];
     for (int j = 0; j < row.size; j++) {
@@ -137,6 +168,7 @@ static inline void edit(int ch, buffalo_state_t* bs) {
   // Get row and col from ncurses
   int row, col;
   getyx(stdscr, row, col);
+  row -= HEADER_HEIGHT + 1;
 
   // Pointer to current row
   row_t* current_row = &bs->row_list->rows[row];
@@ -189,14 +221,20 @@ static inline void edit(int ch, buffalo_state_t* bs) {
 void ui_run(buffalo_state_t* bs) {
   // Loop as long as the program is running
   while (bs->running) {
+    // Display line and col
+    int row, col;
+    getyx(stdscr, row, col);
+    mvprintw(0, 0, "Ln %d, Col %d       ", row - HEADER_HEIGHT, col + 1);
+    move(row, col); // move back to current row/col
+
+    // Lock the UI
+    pthread_mutex_lock(&ui_lock);
+
     // Get a character
     int ch = getch();
 
     // If there was no character, try again
     if (ch == -1) continue;
-
-    // There was some character. Lock the UI
-    pthread_mutex_lock(&ui_lock);
 
     if (ch == CTRL('Q')) { // quit
       quit(bs);
@@ -225,8 +263,11 @@ void ui_exit(buffalo_state_t* bs) {
 
   // Clean up
   unpost_form(editor_form);
+  unpost_form(header_form);
   free_form(editor_form);
+  free_form(header_form);
   free_field(editor_fields[0]);
+  free_field(display_fields[0]);
   endwin();
 
   // Unlock the UI
