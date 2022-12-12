@@ -3,14 +3,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include "gap_buffer.h"
+#include "row.h"
 #include "ui.h"
 #include "buffalo_state.h"
 
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
 #define MIN_INIT_SIZE 16
 
-FILE* load_file(gb_list_t* gbs, const char* file_path) {
+FILE* load_file(row_list_t* row_list, const char* file_path) {
   // Try to open input file
   FILE* input = fopen(file_path, "r+");
   if (input == NULL) {
@@ -32,7 +32,7 @@ FILE* load_file(gb_list_t* gbs, const char* file_path) {
     perror("Unable to seek to beginning of file");
     exit(2);
   }
-
+  
   char* contents = malloc(input_size + 1);
   contents[input_size] = '\0';
 
@@ -43,11 +43,12 @@ FILE* load_file(gb_list_t* gbs, const char* file_path) {
   }
 
   char* line;
-  while ((line = strsep(&contents, "\n")) != NULL) {
-    gap_buffer_t gb;
-    init_gap_buffer(&gb, strlen(line) + 1);
-    insert_string(&gb, line);
-    gb_list_add(gbs, gb);
+  char* contents_temp = contents; // strsep mangles this pointer, so save it
+  while ((line = strsep(&contents_temp, "\n")) != NULL) {
+    row_t row;
+    row_init(&row);
+    row_insert_chars_at(&row, line, strlen(line), 0);
+    row_list_append(row_list, row);
   }
 
   free(contents);
@@ -64,13 +65,13 @@ int main(int argc, char** argv) {
   char* file_path = argv[1];
 
   // Initialize gap buffers
-  gb_list_t gbs;
-  gb_list_init(&gbs);
-  FILE* input = load_file(&gbs, file_path);
+  row_list_t row_list;
+  row_list_init(&row_list);
+  FILE* input = load_file(&row_list, file_path);
   
   // Initialize program state
   buffalo_state_t bs;
-  init_buffalo_state(&bs, file_path, input, &gbs);
+  init_buffalo_state(&bs, file_path, input, &row_list);
 
   // Initialize the ui
   ui_init(&bs);
@@ -79,7 +80,7 @@ int main(int argc, char** argv) {
   ui_run(&bs);
 
   // Clean up
-  gb_list_destroy(&gbs);
+  row_list_destroy(&row_list);
   fclose(input);
   
   return 0;

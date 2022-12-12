@@ -1,5 +1,6 @@
 #include "ui.h"
 #include "buffalo_state.h"
+#include "row.h"
 #include <form.h>
 #include <pthread.h>
 #include <stdbool.h>
@@ -69,16 +70,12 @@ void ui_init(buffalo_state_t* bs) {
 
   // Display initial data
   pthread_mutex_lock(&ui_lock);
-  for (size_t i = 0; i < bs->gbs->length; i++) {
-    gap_buffer_t gb = bs->gbs->buffers[i];
-    char line[gb.capacity];
-    gap_buffer_data(&gb, line);
-    // Display each character in each line
-    for (size_t j = 0; j < gb.capacity; j++) {
-      form_driver(editor_form, gb.data[j]);
+  for (int i = 0; i < bs->row_list->size; i++) {
+    row_t row = bs->row_list->rows[i];
+    for (int j = 0; j < row.size; j++) {
+      form_driver(editor_form, row.chars[j]);
     }
-    // Display newline unless we are at the end
-    if (i != bs->gbs->length - 1) {
+    if (i != bs->row_list->size - 1) {
       form_driver(editor_form, REQ_NEW_LINE);
     }
   }
@@ -102,16 +99,18 @@ static void save(buffalo_state_t* bs) {
     exit(2);
   }
 
-  // Write a line in the file for each buffer
-  for (int i = 0; i < bs->gbs->length; i++) {
-    gap_buffer_t gb = bs->gbs->buffers[i];
-    char line[gb.capacity];
-    gap_buffer_data(&gb, line);
-    fwrite(line, gb.capacity, 1, bs->input);
-    if (i != bs->gbs->length - 1) {
-      fwrite("\n", 1, 1, bs->input);
+  // Write a line in the file for each row
+  for (int i = 0; i < bs->row_list->size; i++) {
+    row_t row = bs->row_list->rows[i];
+    fwrite(row.chars, row.size, sizeof(char), bs->input);
+
+    // Write a newline character unless we're at the last row
+    if (i != bs->row_list->size - 1) {
+      fwrite("\n", 1, sizeof(char), bs->input);
     }
   }
+
+  // Set saved flag
   bs->saved = true;
 }
 
@@ -132,39 +131,55 @@ static inline void arrow_key(buffalo_state_t* bs) {
 }
 
 static inline void edit(int ch, buffalo_state_t* bs) {
+  // Set saved flag
   bs->saved = false;
+
+  // Get row and col from ncurses
   int row, col;
   getyx(stdscr, row, col);
-  gap_buffer_t* line_gb = &bs->gbs->buffers[row];
-  // mvprintw(15, 10, "(%d %d)", row, col);
+
+  // Pointer to current row
+  row_t* current_row = &bs->row_list->rows[row];
+
   if (ch == KEY_BACKSPACE || ch == KEY_DC || ch == 127) {
     // Update UI
     form_driver(editor_form, REQ_DEL_PREV);
-    // If at beginning of line, delete this line
-    if (col == 0 && row > 0) {
-      gb_list_delete(bs->gbs, row);
-    } else { // Otherwise move the cursor and delete character
-      move_cursor_to(line_gb, col);
-      delete_char(line_gb);
+    
+    // If not at beginning of line, delete previous character
+    if (col > 0) {
+      row_delete_at(current_row, col - 1);
+    } else { // Otherwise delete current line
+      row_t* prev_row = &bs->row_list->rows[row - 1];
+
+      // Copy from current row into the end of the previous row
+      row_insert_chars_at(prev_row, current_row->chars, current_row->size, prev_row->size);
+      row_list_delete_at(bs->row_list, row);
     }
   } else if (ch == KEY_ENTER || ch == '\n') {
-    // Insert newline at end of current line
-    move_cursor_to(line_gb, col);
-    insert_char(line_gb, '\n');
-
-    // Insert empty line after current row
-    gap_buffer_t gb;
-    init_gap_buffer(&gb, 8);
-    insert_char(&gb, '\n');
-    gb_list_insert_at(bs->gbs, gb, row);
-
     // Update UI
     form_driver(editor_form, REQ_NEW_LINE);
+    
+    // Initialize new row
+    row_t new_row;
+    row_init(&new_row);
+
+    // If at the beginning of a line, just insert an empty line above
+    if (col == 0) {
+      row_list_insert_at(bs->row_list, new_row, row);
+    } else { // Otherwise we have to split the current line
+      // Insert the characters after the cursor into the new row
+      row_insert_chars_at(&new_row, current_row->chars + col, current_row->size - col, 0);
+
+      // Insert new row after current
+      row_list_insert_at(bs->row_list, new_row, row + 1);
+
+      // Update size of current row. Don't use current_row pointer because of reallocation
+      bs->row_list->rows[row].size = col;
+    }
   } else {
-    // Update UI, move cursor and insert character
+    // Update UI, insert character
     form_driver(editor_form, ch);
-    move_cursor_to(line_gb, col);
-    insert_char(line_gb, ch);
+    row_insert_at(current_row, ch, col);
   }
 }
 

@@ -6,8 +6,8 @@ all: buffalo
 clean:
 	rm -f buffalo
 
-buffalo: buffalo.c gap_buffer.c gap_buffer.h ui.c ui.h buffalo_state.c buffalo_state.h
-	$(CC) $(CFLAGS) -o buffalo buffalo.c buffalo_state.c gap_buffer.c ui.c -lncurses -lform -lpthread
+buffalo: buffalo.c row.c row.h ui.c ui.h buffalo_state.c buffalo_state.h
+	$(CC) $(CFLAGS) -o buffalo buffalo.c buffalo_state.c row.c ui.c -lncurses -lform -lpthread
 
 format:
 	@echo "Reformatting source code."
