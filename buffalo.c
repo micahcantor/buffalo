@@ -86,6 +86,7 @@ int main(int argc, char** argv) {
 
   // Clean up
   row_list_destroy(&row_list);
+  config_destroy(&config);
   fclose(input);
   
   return 0;
