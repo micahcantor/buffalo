@@ -1,3 +1,5 @@
+#pragma once
+
 typedef struct {
   char* build_command;
   char* test_command;

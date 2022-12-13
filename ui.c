@@ -125,7 +125,7 @@ static void run_command(const char* command) {
 
   // Execute build command in child
   if (child_id == 0) {
-    int rc = execlp(command, command, NULL);
+    int rc = execlp("/bin/sh", "/bin/sh", "-c", command, NULL);
     if (rc == -1) {
       perror("exec failed");
       exit(EXIT_FAILURE);
@@ -252,14 +252,14 @@ static inline void edit(int ch, buffalo_state_t* bs) {
 void ui_run(buffalo_state_t* bs) {
   // Loop as long as the program is running
   while (bs->running) {
+    // Lock the UI
+    pthread_mutex_lock(&ui_lock);
+    
     // Display line and col
     int row, col;
     getyx(stdscr, row, col);
     mvprintw(0, 0, "Ln %d, Col %d       ", row - HEADER_HEIGHT, col + 1);
     move(row, col); // move back to current row/col
-
-    // Lock the UI
-    pthread_mutex_lock(&ui_lock);
 
     // Get a character
     int ch = getch();
