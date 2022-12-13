@@ -1,5 +1,5 @@
 CC := clang
-CFLAGS := -g -Wall -Wno-deprecated-declarations -Werror -fsanitize=address
+CFLAGS := -g -Wall -Wno-deprecated-declarations -Werror -O3 -fsanitize=address
 
 all: buffalo
 

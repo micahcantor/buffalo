@@ -80,8 +80,8 @@ void config_parse(config_t* config) {
     while ((line = strsep(&data_temp, "\n")) != NULL) {
       if (strcmp(line, "") != 0) { // skip blank lines
         char* key = strsep(&line, ":");
-        if (key == NULL) {
-          perror("Failed to parse configuration file");
+        if (key == NULL || line == NULL) {
+          fprintf(stderr, "Failed to parse config file: missing colon.\n");
           exit(1);
         }
 
@@ -97,7 +97,7 @@ void config_parse(config_t* config) {
         } else if (strcmp(key, "test") == 0) {
           config->test_command = strdup(value);
         } else {
-          perror("Failed to parse configuration file");
+          fprintf(stderr, "Failed to parse config file: unknown key.\n");
           exit(1);
         }
       }

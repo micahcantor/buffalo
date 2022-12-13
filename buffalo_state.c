@@ -10,4 +10,6 @@ void init_buffalo_state(buffalo_state_t* bs, const char* file_path, FILE* input,
   bs->running = true;
   bs->saved = true;
   bs->config = config;
+  bs->row = 0;
+  bs->col = 0;
 }
