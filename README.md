@@ -1,4 +1,4 @@
-# buffalo: a terminal text editor
+# buffalo: a terminal text editor 🦬
 
 **buffalo** is a terminal text editor written in C and built on top of ncurses.
 

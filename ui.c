@@ -180,20 +180,24 @@ static inline void arrow_key(buffalo_state_t* bs) {
   if (ch1 == '[') { // first char in sequence is '['
     int ch2 = getch();
     if (ch2 == 'A') { // up arrow
+      // Prevent moving up past first row
       if (bs->row > 0) {
         bs->col = 0;
         bs->row--;
       }
 
+      // Decrement scroll if at the top of the screen
       if (bs->row == bs->scroll_offset - 1) {
         bs->scroll_offset--;
       }
     } else if (ch2 == 'B') { // down arrow
-      if (bs->row < bs->row_list->size - 1) { // stop from moving below last line
+      // stop from moving below last line
+      if (bs->row < bs->row_list->size - 1) { 
         bs->col = 0;
         bs->row++;
       }
 
+      // Increment scroll if at bottom of the screen
       if (bs->row == editor_height + bs->scroll_offset) {
         bs->scroll_offset++;
       }
@@ -201,6 +205,7 @@ static inline void arrow_key(buffalo_state_t* bs) {
       int row_size = bs->row_list->rows[bs->row].size;
       // If at the end of the last line, do nothing
       if (bs->col == row_size && bs->row == bs->row_list->size - 1) return;
+
       // If at the end of a line, skip to the next line.
       if (bs->col == row_size) {
         bs->col = 0;
@@ -209,6 +214,7 @@ static inline void arrow_key(buffalo_state_t* bs) {
         bs->col++;
       }
     } else if (ch2 == 'D') { // left arrow
+      // If at beginning of first line, do nothing
       if (bs->col == 0 && bs->row == 0) return;
 
       // If at the beginning of a line, jump to the end of the previous line.
@@ -229,7 +235,7 @@ static void backspace(buffalo_state_t* bs, row_t* current_row) {
   if (bs->col > 0) {
     row_delete_at(current_row, bs->col - 1);
     bs->col--;
-  } else if (bs->row > 0) { // Otherwise delete current line, unless on first line
+  } else if (bs->row > 0) { // Unless on the first line, delete this row
     row_t* prev_row = &bs->row_list->rows[bs->row - 1];
     bs->col = prev_row->size;
 
@@ -237,7 +243,7 @@ static void backspace(buffalo_state_t* bs, row_t* current_row) {
     row_insert_chars_at(prev_row, current_row->chars, current_row->size, prev_row->size);
     row_list_delete_at(bs->row_list, bs->row);
 
-    bs->row--;
+    bs->row--; // move back a row
   }
 }
 
@@ -260,10 +266,11 @@ static void enter(buffalo_state_t* bs, row_t* current_row) {
     // Update size of current row. Don't use current_row pointer because of reallocation
     bs->row_list->rows[bs->row].size = bs->col;
 
+    // Move cursor to beginning of line
     bs->col = 0;
   }
 
-  bs->row++;
+  bs->row++; // move to next row
 }
 
 /* Handle an edit performed by the user */
@@ -317,6 +324,7 @@ void* ui_run(void* arg) {
     // If there was no character, try again
     if (ch == -1) continue;
 
+    // Handle user input
     if (ch == CTRL('Q')) { // quit
       quit(bs);
     } else if (ch == CTRL('S')) { // save
@@ -331,6 +339,7 @@ void* ui_run(void* arg) {
       edit(ch, bs);
     }
 
+    // Clear and redraw the screen
     clear_editor();
     display_editor(bs);
 
