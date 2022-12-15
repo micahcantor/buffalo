@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <pthread.h>
 #include "row.h"
 #include "ui.h"
 #include "buffalo_state.h"
@@ -10,9 +11,10 @@
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
 #define MIN_INIT_SIZE 16
 
+
 FILE* load_file(row_list_t* row_list, const char* file_path) {
   // Try to open input file
-  FILE* input = fopen(file_path, "r+");
+  FILE* input = fopen(file_path, "a+");
   if (input == NULL) {
     perror("Unable to open input file");
     exit(1);
@@ -82,7 +84,17 @@ int main(int argc, char** argv) {
   ui_init(&bs);
 
   // Run the ui, continuing until ui_exit is called somewhere
-  ui_run(&bs);
+  pthread_t ui_thread;
+  if (pthread_create(&ui_thread, NULL, ui_run, (void*)&bs) != 0) {
+    perror("pthread_create");
+    exit(2);
+  }
+
+  // Wait for ui thread to exit
+  if (pthread_join(ui_thread, NULL) != 0) {
+    perror("pthread_join");
+    exit(2);
+  }
 
   // Clean up
   row_list_destroy(&row_list);

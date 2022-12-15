@@ -12,4 +12,5 @@ void init_buffalo_state(buffalo_state_t* bs, const char* file_path, FILE* input,
   bs->config = config;
   bs->row = 0;
   bs->col = 0;
+  bs->scroll_offset = 0;
 }

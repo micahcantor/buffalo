@@ -4,6 +4,6 @@
 
 void ui_init(buffalo_state_t* bs);
 
-void ui_run(buffalo_state_t* bs);
+void* ui_run(void* arg);
 
 void ui_exit(buffalo_state_t* bs);

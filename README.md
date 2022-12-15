@@ -4,7 +4,7 @@
 
 ## Running
 
-Compile the program with `make`, then run it by passing the name of a file as and argument:
+Compile the program with `make`, dependencies are the `curses` and `pthread` libraries. Then run it by passing the name of a file as and argument. The file will be created if it does not already exist:
 
 ```sh
 $ make
@@ -22,8 +22,19 @@ test: make test
 
 This configures the editor to use `make` as the build command and `make test` as the test command.
 
+## Shortcuts
+
+The following shortcuts are recognized:
+
+```
+Ctrl+S: save
+Ctrl+Q: quit
+Ctrl+B: build
+Ctrl+T: test
+```
+
 ## Bugs
 
-There are several known bugs:
+There are some known bugs:
 
-- Adding characters on a current line past the width of the terminal causes a segfault.
+- Horizontal scrolling has not been implemented, so characters past the width of the terminal cannot be viewed, but they can be edited.

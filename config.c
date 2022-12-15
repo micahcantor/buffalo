@@ -4,16 +4,19 @@
 #include <string.h>
 #include <ctype.h>
 
+/* Initialize a config pointer */
 void config_init(config_t* config) {
   config->build_command = NULL;
   config->test_command = NULL;
 }
 
+/* Free the memory held by a config */
 void config_destroy(config_t* config) {
   free(config->build_command);
   free(config->test_command);
 }
 
+/* Trim the whitespace from a null-terminated string. */
 static void trim_whitespace(char* str) {
   // Find the first non-whitespace character
   int start = 0;
@@ -31,6 +34,8 @@ static void trim_whitespace(char* str) {
   str[length] = '\0';
 }
 
+/* Parse the configuration file in the current or home directory. If a config field is not
+  found, it is left unchanged. */
 void config_parse(config_t* config) {
   const char* config_name = ".buffalorc";
 
