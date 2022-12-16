@@ -4,7 +4,7 @@
 
 **buffalo** is a terminal text editor written in C and built on top of ncurses.
 
-![preview](img/preview.png)
+![preview](img/buffalo-preview.png)
 
 ## Running
 
