@@ -1,8 +1,10 @@
 # buffalo: a terminal text editor 🦬
 
-> *Buffalo buffalo Buffalo buffalo buffalo buffalo Buffalo buffalo*
+> *Buffalo buffalo Buffalo buffalo buffalo buffalo Buffalo buffalo.*
 
 **buffalo** is a terminal text editor written in C and built on top of ncurses.
+
+![preview](img/preview.png)
 
 ## Running
 
