@@ -6,7 +6,7 @@
 
 ![preview](img/buffalo-preview.png)
 
-## Running
+## Usage
 
 Compile the program with `make`, dependencies are the `ncurses` and `pthread` libraries. Then run it by passing the name of a file as and argument. The file will be created if it does not already exist:
 
@@ -14,6 +14,8 @@ Compile the program with `make`, dependencies are the `ncurses` and `pthread` li
 $ make
 $ ./buffalo hello.txt
 ```
+
+The editor can be navigated using the arrow keys or scrolled with the mouse.
 
 ## Configuration
 
