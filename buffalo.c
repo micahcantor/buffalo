@@ -11,7 +11,6 @@
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
 #define MIN_INIT_SIZE 16
 
-
 FILE* load_file(row_list_t* row_list, const char* file_path) {
   // Try to open input file
   FILE* input = fopen(file_path, "a+");

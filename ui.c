@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/wait.h>
+#include <stdarg.h>
 
 #define HEADER_HEIGHT 1
 #define FOOTER_HEIGHT 1
@@ -66,6 +67,16 @@ static void clear_editor() {
   }
 }
 
+/* Wrapper around vw_printw to print in the footer line */
+static void footer_printf(const char* fmt, ...) {
+  move(num_rows - 1, 0); // move to footer
+  clrtoeol(); // clear anything left over
+  va_list args;
+  va_start(args, fmt);
+  vw_printw(stdscr, fmt, args);
+  va_end(args);
+}
+
 /* Run a command in the shell. Returns the exit status of the command. */
 static int run_command(const char* command) {
   // Create a child process
@@ -106,9 +117,9 @@ static int run_command(const char* command) {
 static void build(buffalo_state_t* bs) {
   if (bs->config->build_command != NULL) {
     int rc = run_command(bs->config->build_command);
-    mvprintw(num_rows - 1, 0, "Build finished with status %d", rc);
+    footer_printf("Build finished with status %d", rc);
   } else {
-    mvprintw(num_rows - 1, 0, "No configured build command found");
+    footer_printf("No configured build command found");
   }
 }
 
@@ -116,9 +127,9 @@ static void build(buffalo_state_t* bs) {
 static void test(buffalo_state_t* bs) {
   if (bs->config->test_command != NULL) {
     int rc = run_command(bs->config->test_command);
-    mvprintw(num_rows - 1, 0, "Tests finished with status %d", rc);
+    footer_printf("Tests finished with status %d", rc);
   } else {
-    mvprintw(num_rows - 1, 0, "No configured test command found");
+    footer_printf("No configured test command found");
   }
 }
 
@@ -127,14 +138,13 @@ static void quit(buffalo_state_t* bs) {
   if (bs->saved) {
     ui_exit(bs);
   } else {
-    mvprintw(num_rows - 1, 0, "Quit without saving? (y/n)");
+    footer_printf("Quit without saving? (y/n) ");
     int ch = getch();
     if (ch == 'y') 
       ui_exit(bs);
     else {
       // Clear the message from the footer
-      move(num_rows - 1, 0);
-      clrtoeol();
+      footer_printf("");
     }
   }
 }
@@ -164,6 +174,9 @@ static void save(buffalo_state_t* bs) {
 
   // Set saved flag
   bs->saved = true;
+
+  // Print message in footer
+  footer_printf("Saved %s", file_name);
 }
 
 /* Handle arrow key cursor movement from user. */
