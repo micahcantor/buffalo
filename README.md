@@ -4,7 +4,7 @@
 
 **buffalo** is a terminal text editor written in C and built on top of ncurses.
 
-![preview](img/buffalo-preview.png)
+![preview](resources/buffalo-preview.png)
 
 ## Usage
 
@@ -45,3 +45,7 @@ There are many unimplemented features:
 
 - Horizontal scrolling has not been implemented, so characters past the width of the terminal cannot be viewed, but they can be edited.
 - Tab input has not been implemented
+
+## Acknowledgements
+
+This project was built as my final project for CSC-213: Operating Systems at Grinnell College. Some of the initial code was borrowed from Charlie Curtsinger. Slides for my presentation can be found under `resources`.
