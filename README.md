@@ -37,8 +37,9 @@ Ctrl+B: build
 Ctrl+T: test
 ```
 
-## Bugs
+## Limitations
 
-There are some known bugs:
+There are many unimplemented features:
 
 - Horizontal scrolling has not been implemented, so characters past the width of the terminal cannot be viewed, but they can be edited.
+- Tab input has not been implemented

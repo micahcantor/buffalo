@@ -106,11 +106,7 @@ static int run_command(const char* command) {
 static void build(buffalo_state_t* bs) {
   if (bs->config->build_command != NULL) {
     int rc = run_command(bs->config->build_command);
-    if (rc >= 0) {
-      mvprintw(num_rows - 1, 0, "Build completed with status %d", rc);
-    } else {
-      mvprintw(num_rows - 1, 0, "Build failed with status %d", rc);
-    }
+    mvprintw(num_rows - 1, 0, "Build finished with status %d", rc);
   } else {
     mvprintw(num_rows - 1, 0, "No configured build command found");
   }
@@ -120,11 +116,7 @@ static void build(buffalo_state_t* bs) {
 static void test(buffalo_state_t* bs) {
   if (bs->config->test_command != NULL) {
     int rc = run_command(bs->config->test_command);
-    if (rc >= 0) {
-      mvprintw(num_rows - 1, 0, "Tests completed with status %d", rc);
-    } else {
-      mvprintw(num_rows - 1, 0, "Tests failed with status %d.", rc);
-    }
+    mvprintw(num_rows - 1, 0, "Tests finished with status %d", rc);
   } else {
     mvprintw(num_rows - 1, 0, "No configured test command found");
   }
