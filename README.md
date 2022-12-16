@@ -8,7 +8,7 @@
 
 ## Running
 
-Compile the program with `make`, dependencies are the `curses` and `pthread` libraries. Then run it by passing the name of a file as and argument. The file will be created if it does not already exist:
+Compile the program with `make`, dependencies are the `ncurses` and `pthread` libraries. Then run it by passing the name of a file as and argument. The file will be created if it does not already exist:
 
 ```sh
 $ make
