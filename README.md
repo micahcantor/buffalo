@@ -48,4 +48,4 @@ There are many unimplemented features:
 
 ## Acknowledgements
 
-This project was built as my final project for CSC-213: Operating Systems at Grinnell College. Some of the initial code was borrowed from Charlie Curtsinger. Slides for my presentation can be found under `resources`.
+This project was built as my final project for CSC-213: Operating Systems at Grinnell College. Some of the initial code was borrowed from [Charlie Curtsinger](https://curtsinger.cs.grinnell.edu/). Slides for my presentation can be found under `resources`.
